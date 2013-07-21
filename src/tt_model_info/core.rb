@@ -1,46 +1,44 @@
-#-----------------------------------------------------------------------------
-# Compatible: SketchUp 6 (PC)
-#             (other versions untested)
-#-----------------------------------------------------------------------------
-#
-# CHANGELOG
-#
-# 1.0.0 - 09.12.2010
-#		 * Initial release.
-#
-# 1.1.0 - 09.12.2010
-#		 * Added Triangle info to Extended Model Info.
-#
-# 1.1.1 - 09.12.2010
-#		 * Updated output info.
-#
-# 1.2.0 - 13.12.2010
-#		 * Added Component Statistics.
-#
-#-----------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #
 # Thomas Thomassen
 # thomas[at]thomthom[dot]net
 #
-#-----------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 require 'sketchup.rb'
-require 'TT_Lib2/core.rb'
+begin
+  require 'TT_Lib2/core.rb'
+rescue LoadError => e
+  module TT
+    if @lib2_update.nil?
+      url = 'http://www.thomthom.net/software/sketchup/tt_lib2/errors/not-installed'
+      options = {
+        :dialog_title => 'TT_Lib² Not Installed',
+        :scrollable => false, :resizable => false, :left => 200, :top => 200
+      }
+      w = UI::WebDialog.new( options )
+      w.set_size( 500, 300 )
+      w.set_url( "#{url}?plugin=#{File.basename( __FILE__ )}" )
+      w.show
+      @lib2_update = w
+    end
+  end
+end
 
-TT::Lib.compatible?('2.4.0', 'TT Model Info')
 
-#-----------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
+if defined?( TT::Lib ) && TT::Lib.compatible?( '2.7.0', 'Model Info' )
 
 module TT::Plugins::ModelInfo
-  
-  ### CONSTANTS ### --------------------------------------------------------
-  
-  VERSION = '1.2.0'.freeze
-  PREF_KEY = 'TT_ModelInfo'.freeze
-  
+
+
+  ### CONSTANTS ### ------------------------------------------------------------
+
+
   MSG_ERROR = MB_OK #| 272 #TT::MB_ICONSTOP
   MSG_OK = MB_OK #| TT::MB_ICONINFORMATION
-  
+
   # Map DrawingElement types to symbols
   DE_MAP = {
     'Polyline3d'      => :polyline3d,
@@ -49,7 +47,7 @@ module TT::Plugins::ModelInfo
     #'DimensionLinear' => :dim_lin,
     #'DimensionRadial' => :dim_rad
   }
-  
+
   CL_MAP = {
     Sketchup::Edge => 'Edges',
     Sketchup::Face => 'Faces',
@@ -64,11 +62,11 @@ module TT::Plugins::ModelInfo
     :dimension => 'Dimensions',
     :triangles => 'Triangles'
   }
-  
+
   CL_MAP_EX = [
     :triangles
   ]
-  
+
   TYPE_ORDER = [
     Sketchup::Edge,
     Sketchup::Face,
@@ -83,62 +81,35 @@ module TT::Plugins::ModelInfo
     :dimension,
     Sketchup::Text
   ]
-  
-  
-  ### MODULE VARIABLES ### -------------------------------------------------
-  
+
+
+  ### MODULE VARIABLES ### -----------------------------------------------------
+
   # Preference
-  @settings = TT::Settings.new(PREF_KEY)
+  @settings = TT::Settings.new(PLUGIN_ID)
   @settings[:ray_stop_at_ground, false]
   @settings[:rayspray_number, 32]
-  
-  
-  ### MENU & TOOLBARS ### --------------------------------------------------
-  
+
+
+  ### MENU & TOOLBARS ### ------------------------------------------------------
+
   unless file_loaded?( File.basename(__FILE__) )
     m = TT.menu('Plugins').add_submenu('Model Info')
     m.add_item('Statistics to File') {
-      self.count_model_entities }
-    m.add_item('Statistics to Console') {
-      self.count_model_entities( false ) }
-    m.add_separator
-    m.add_item('Extended Statistics to File') {
       self.count_model_entities( true, true ) }
-    m.add_item('Extended Statistics to Console') {
+    m.add_item('Statistics to Console') {
       self.count_model_entities( false, true ) }
     m.add_separator
     m.add_item('Component Statistics to File') {
       self.count_component_instances( true ) }
     m.add_item('Component Statistics to Console') {
       self.count_component_instances( false ) }
-      
-    #m = TT.menu('File')
-    #m.add_item('Open Model Folder') {
-    #  self.open_model_folder }
   end
-  
-  
-  ### MAIN SCRIPT ### ------------------------------------------------------
-  
-  # (!) See "Open Model Folder" plugin
-  def self.open_model_folder
-    model = Sketchup.active_model
-    return false if model.path.empty?
-    path = File.dirname( Sketchup.active_model.path )
-    #match = model.path.match(/.*\\/)
-    #return false if match.nil?
-    #path = match[0]
-    puts path
-    #p path.length
-    #p File.dirname( Sketchup.active_model.path).length
-    if TT::System.is_osx?
-      system "open '#{path}'"
-    else
-      system "explorer.exe '#{path}'"
-    end
-  end
-  
-  
+
+
+  ### MAIN SCRIPT ### ----------------------------------------------------------
+
+
   # Sums up the statistics of the model and outputs it to a file.
   def self.count_model_entities( to_file = true, extended = false )
     model = Sketchup.active_model
@@ -165,7 +136,7 @@ module TT::Plugins::ModelInfo
     data << ('-' * width)
     data << "#{title}".center(width)
     data << ('=' * width)
-    types = (extended) ? TYPE_ORDER : TYPE_ORDER - CL_MAP_EX 
+    types = (extended) ? TYPE_ORDER : TYPE_ORDER - CL_MAP_EX
     types.each { |type|
       count = stats[ type ] || 0
       label = CL_MAP[ type ]
@@ -197,7 +168,7 @@ module TT::Plugins::ModelInfo
       UI.start_timer( 0, false ) { puts data.join("\n") }
     end
   end
-  
+
   def self.count_entities(entities, table={}, extended = false )
     for e in entities
       c = e.class
@@ -226,8 +197,8 @@ module TT::Plugins::ModelInfo
     end
     table
   end
-  
-  
+
+
     # Sums up the statistics of the components and outputs it to a file.
   def self.count_component_instances( to_file = true )
     model = Sketchup.active_model
@@ -258,7 +229,7 @@ module TT::Plugins::ModelInfo
     data << ('-' * width)
     data << "#{title}".center(width)
     data << ('=' * width)
-    #types = (extended) ? TYPE_ORDER : TYPE_ORDER - CL_MAP_EX 
+    #types = (extended) ? TYPE_ORDER : TYPE_ORDER - CL_MAP_EX
     #names = stats.key.map { |d| d.name }.
     # ASCII sort the definition names - not accurate, but...
     sorted = stats.keys.sort { |a,b| a.name <=> b.name }
@@ -291,7 +262,7 @@ module TT::Plugins::ModelInfo
       UI.start_timer( 0, false ) { puts data.join("\n") }
     end
   end
-  
+
   def self.count_components(entities, table={} )
     for e in entities
       if e.is_a?( Sketchup::ComponentInstance )
@@ -309,16 +280,44 @@ module TT::Plugins::ModelInfo
     end
     table
   end
-  
-  
-  ### DEBUG ### ------------------------------------------------------------
-  
-  def self.reload
+
+
+  ### DEBUG ### ----------------------------------------------------------------
+
+  # @note Debug method to reload the plugin.
+  #
+  # @example
+  #   TT::Plugins::ModelInfo.reload
+  #
+  # @param [Boolean] tt_lib Reloads TT_Lib2 if +true+.
+  #
+  # @return [Integer] Number of files reloaded.
+  # @since 1.0.0
+  def self.reload( tt_lib = false )
+    original_verbose = $VERBOSE
+    $VERBOSE = nil
+    TT::Lib.reload if tt_lib
+    # Core file (this)
     load __FILE__
+    # Supporting files
+    if defined?( PATH ) && File.exist?( PATH )
+      x = Dir.glob( File.join(PATH, '*.{rb,rbs}') ).each { |file|
+        load file
+      }
+      x.length + 1
+    else
+      1
+    end
+  ensure
+    $VERBOSE = original_verbose
   end
-  
+
 end # module
 
-#-----------------------------------------------------------------------------
-file_loaded( File.basename(__FILE__) )
-#-----------------------------------------------------------------------------
+end # if TT_Lib
+
+#-------------------------------------------------------------------------------
+
+file_loaded( __FILE__ )
+
+#-------------------------------------------------------------------------------
