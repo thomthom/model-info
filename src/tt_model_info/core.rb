@@ -30,6 +30,8 @@ end
 
 if defined?( TT::Lib ) && TT::Lib.compatible?( '2.7.0', 'Model Info' )
 
+require 'tt_model_info/service'
+
 module TT::Plugins::ModelInfo
 
 
