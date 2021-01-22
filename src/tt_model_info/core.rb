@@ -95,7 +95,7 @@ module TT::Plugins::ModelInfo
 
   ### MENU & TOOLBARS ### ------------------------------------------------------
 
-  unless file_loaded?( File.basename(__FILE__) )
+  unless file_loaded?( __FILE__ )
     m = TT.menu('Plugins').add_submenu('Model Info')
     m.add_item('Statistics to File') {
       self.count_model_entities( true, true ) }
@@ -303,7 +303,7 @@ module TT::Plugins::ModelInfo
     load __FILE__
     # Supporting files
     if defined?( PATH ) && File.exist?( PATH )
-      x = Dir.glob( File.join(PATH, '*.{rb,rbs}') ).each { |file|
+      x = Dir.glob( File.join(PATH, '*.rb') ).each { |file|
         load file
       }
       x.length + 1
