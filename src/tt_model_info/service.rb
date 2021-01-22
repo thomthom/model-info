@@ -22,7 +22,7 @@ module TT::Plugins::ModelInfo
       super('Model Information')
 
       @model_info = {}
-      @display_info = true
+      @display_info = false
 
       @button_points = nil
       @button_hover = false
@@ -56,12 +56,15 @@ module TT::Plugins::ModelInfo
 
     # @param [Sketchup::View] view
     def start(view)
+      puts "start (#{self.class.name})"
       start_observing_app
     end
 
     # @param [Sketchup::View] view
     def stop(view)
+      puts "stop (#{self.class.name})"
       stop_observing_app
+      reset(view.model)
     end
 
     # @param [Sketchup::View] view
@@ -71,7 +74,24 @@ module TT::Plugins::ModelInfo
 
     # @param [Sketchup::Model] model
     def onOpenModel(model)
+      puts "onOpenModel (#{self.class.name})"
       update_info(model)
+    end
+
+    # @param [Sketchup::Model] model
+    def onNewModel(model)
+      puts "onNewModel (#{self.class.name})"
+      reset(model)
+    end
+
+    def onActiveToolChanged(tools, tool_name, tool_id)
+      puts "onActiveToolChanged (#{self.class.name})"
+      reset(tools.model)
+    end
+
+    def onToolStateChanged(tools, tool_name, tool_id, tool_state)
+      puts "onToolStateChanged (#{self.class.name})"
+      reset(tools.model)
     end
 
     # @param [Sketchup::View] view
@@ -81,6 +101,20 @@ module TT::Plugins::ModelInfo
     end
 
     private
+
+    def reset(model)
+      puts "reset (#{self.class.name})"
+      @model_info = {}
+      @display_info = false
+
+      @button_points = nil
+      @button_hover = false
+      @button_pressed = false
+
+      model.tools.remove_observer(self)
+
+      model.active_view.invalidate
+    end
 
     def has_unused?
       model = Sketchup.active_model
@@ -241,10 +275,13 @@ module TT::Plugins::ModelInfo
 
     # @param [Sketchup::Model] model
     def update_info(model)
+      puts "update_info (#{self.class.name})"
       @button_points = nil
       @model_info = collect_info(model.entities)
       @display_info = true
       # puts JSON.pretty_generate(@model_info)
+      model.tools.remove_observer(self)
+      model.tools.add_observer(self)
       model.active_view.invalidate
     end
 
