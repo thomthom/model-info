@@ -34,7 +34,7 @@ module TT
     ex = SketchupExtension.new( PLUGIN_NAME, loader )
     ex.description = 'Generates model statistics.'
     ex.version     = PLUGIN_VERSION
-    ex.copyright   = 'Thomas Thomassen © 2010–2013'
+    ex.copyright   = 'Thomas Thomassen © 2010–2021'
     ex.creator     = 'Thomas Thomassen (thomas@thomthom.net)'
     Sketchup.register_extension( ex, true )
   end
