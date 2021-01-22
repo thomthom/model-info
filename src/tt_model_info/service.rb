@@ -18,31 +18,42 @@ module TT::Plugins::ModelInfo
       @model_info = {}
     end
 
-    def start(view)
-      start_observing_app
-      start_observing_model(view.model)
+    def activate
+      super
+      update_info(Sketchup.active_model)
     end
 
+    # @param [Sketchup::View] view
+    def start(view)
+      start_observing_app
+    end
+
+    # @param [Sketchup::View] view
     def stop(view)
-      stop_observing_model(view.model)
       stop_observing_app
     end
 
+    # @param [Sketchup::View] view
     def draw(view)
       # ...
     end
 
-    # @param [Sketchup::Model]
-    def onNewModel(model)
-      start_observing_model(model)
-    end
-
-    # @param [Sketchup::Model]
+    # @param [Sketchup::Model] model
     def onOpenModel(model)
-      start_observing_model(model)
+      update_info(model)
     end
 
     private
+
+    def collect_info(entities, extended: true)
+      TT::Plugins::ModelInfo.count_entities(entities, {}, extended)
+    end
+
+    # @param [Sketchup::Model] model
+    def update_info(model)
+      @model_info = collect_info(model.entities)
+      puts JSON.pretty_generate(@model_info)
+    end
 
     def start_observing_app
       # TODO: Need to figure out how model services works with Mac's MDI.
@@ -54,20 +65,6 @@ module TT::Plugins::ModelInfo
     def stop_observing_app
       return unless Sketchup.platform == :platform_win
       Sketchup.remove_observer(self)
-    end
-
-    # @param [Sketchup::Model]
-    def start_observing_model(model)
-      stop_observing_model(model)
-      model.add_observer(self)
-      model.shadow_info.add_observer(self)
-      analyze
-    end
-
-    # @param [Sketchup::Model]
-    def stop_observing_model(model)
-      model.shadow_info.remove_observer(self)
-      model.remove_observer(self)
     end
 
   end
