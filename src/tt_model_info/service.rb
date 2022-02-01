@@ -18,8 +18,12 @@ module TT::Plugins::ModelInfo
     include DrawingHelper
     include ViewConstants
 
+    attr_reader :service_id, :name
+
     def initialize
-      super('Model Information')
+      super
+      @service_id = 'thomthom.modelinfo'.freeze
+      @name = 'Model Information'.freeze
 
       @model_info = {}
       @display_info = false
