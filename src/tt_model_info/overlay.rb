@@ -68,7 +68,7 @@ module TT::Plugins::ModelInfo
     def stop(view)
       puts "stop (#{self.class.name})"
       stop_observing_app
-      reset(view.model)
+      reset(view&.model || Sketchup.active_model)
     end
 
     # @param [Sketchup::View] view
