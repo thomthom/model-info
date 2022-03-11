@@ -5,24 +5,24 @@ require 'tt_model_info/drawing_helper'
 
 module TT::Plugins::ModelInfo
 
-  MODEL_SERVICE = if defined?(Sketchup::ModelService)
-    Sketchup::ModelService
+  OVERLAY = if defined?(Sketchup::Overlay)
+    Sketchup::Overlay
   else
-    require 'tt_model_info/mock_service'
-    MockService
+    require 'tt_model_info/mock_overlay'
+    MockOverlay
   end
 
 
-  class ModelInfoService < MODEL_SERVICE
+  class ModelInfoOverlay < OVERLAY
 
     include DrawingHelper
     include ViewConstants
 
-    attr_reader :service_id, :name
+    attr_reader :overlay_id, :name
 
     def initialize
       super
-      @service_id = 'thomthom.modelinfo'.freeze
+      @overlay_id = 'thomthom.modelinfo'.freeze
       @name = 'Model Information'.freeze
 
       @model_info = {}
@@ -290,7 +290,7 @@ module TT::Plugins::ModelInfo
     end
 
     def start_observing_app
-      # TODO: Need to figure out how model services works with Mac's MDI.
+      # TODO: Need to figure out how model overlays works with Mac's MDI.
       return unless Sketchup.platform == :platform_win
       Sketchup.remove_observer(self)
       Sketchup.add_observer(self)
@@ -304,40 +304,40 @@ module TT::Plugins::ModelInfo
   end
 
 
-  # TT::Plugins::ModelInfo.service
-  def self.service
-    @service
+  # TT::Plugins::ModelInfo.overlay
+  def self.overlay
+    @overlay
   end
 
-  def self.start_service
-    unless defined?(Sketchup::ModelService)
-      warn 'ModelService not supported by this SketchUp version.'
+  def self.start_overlay
+    unless defined?(Sketchup::Overlay)
+      warn 'Overlay not supported by this SketchUp version.'
 
       # TODO: Debug: Remove later.
       menu = UI.menu('Plugins')
-      menu.add_item('Model Info Service') do
-        self.start_service_as_tool
+      menu.add_item('Model Info Overlay') do
+        self.start_overlay_as_tool
       end
 
       return
     end
 
     model = Sketchup.active_model
-    @service = ModelInfoService.new
-    model.services.remove(@service) if @service
-    model.services.add(@service)
-    @service
+    @overlay = ModelInfoOverlay.new
+    model.overlays.remove(@overlay) if @overlay
+    model.overlays.add(@overlay)
+    @overlay
   end
 
-  def self.start_service_as_tool
-    service = ModelInfoService.new
+  def self.start_overlay_as_tool
+    overlay = ModelInfoOverlay.new
     model = Sketchup.active_model
-    model.select_tool(service)
-    service
+    model.select_tool(overlay)
+    overlay
   end
 
   unless file_loaded?(__FILE__)
-    self.start_service
+    self.start_overlay
     file_loaded( __FILE__ )
   end
 

@@ -1,7 +1,7 @@
 module TT::Plugins::ModelInfo
 
   # Shim for testing in older SU versions as a tool.
-  class MockService
+  class MockOverlay
 
     attr_writer :enabled
 

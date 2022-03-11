@@ -30,7 +30,7 @@ end
 
 if defined?( TT::Lib ) && TT::Lib.compatible?( '2.7.0', 'Model Info' )
 
-require 'tt_model_info/service'
+require 'tt_model_info/overlay'
 
 module TT::Plugins::ModelInfo
 
