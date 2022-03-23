@@ -68,7 +68,8 @@ module TT::Plugins::ModelInfo
     def stop(view)
       puts "stop (#{self.class.name})"
       stop_observing_app
-      reset(view&.model || Sketchup.active_model)
+      # reset(view&.model || Sketchup.active_model)
+      reset(view&.model)
     end
 
     # @param [Sketchup::View] view
@@ -115,9 +116,9 @@ module TT::Plugins::ModelInfo
       @button_hover = false
       @button_pressed = false
 
-      model.tools.remove_observer(self)
+      (model || Sketchup.active_model).tools.remove_observer(self)
 
-      model.active_view.invalidate
+      model.active_view.invalidate if model
     end
 
     def has_unused?
@@ -323,8 +324,8 @@ module TT::Plugins::ModelInfo
     end
 
     model = Sketchup.active_model
-    @overlay = ModelInfoOverlay.new
     model.overlays.remove(@overlay) if @overlay
+    @overlay = ModelInfoOverlay.new
     model.overlays.add(@overlay)
     @overlay
   end
