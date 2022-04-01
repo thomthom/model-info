@@ -305,9 +305,21 @@ module TT::Plugins::ModelInfo
   end
 
 
-  # TT::Plugins::ModelInfo.overlay
-  def self.overlay
-    @overlay
+  class AppObserver < Sketchup::AppObserver
+
+    def expectsStartupModelNotifications
+      true
+    end
+
+    def register_overlay(model)
+      @@overlays ||= {}
+      overlay = ModelInfoOverlay.new
+      model.overlays.add(overlay)
+      @@overlays[model] = overlay
+    end
+    alias_method :onNewModel, :register_overlay
+    alias_method :onOpenModel, :register_overlay
+
   end
 
   def self.start_overlay
@@ -323,11 +335,8 @@ module TT::Plugins::ModelInfo
       return
     end
 
-    model = Sketchup.active_model
-    model.overlays.remove(@overlay) if @overlay
-    @overlay = ModelInfoOverlay.new
-    model.overlays.add(@overlay)
-    @overlay
+    observer = AppObserver.new
+    Sketchup.add_observer(observer)
   end
 
   def self.start_overlay_as_tool
