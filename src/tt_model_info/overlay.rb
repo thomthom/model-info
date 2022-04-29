@@ -18,12 +18,8 @@ module TT::Plugins::ModelInfo
     include DrawingHelper
     include ViewConstants
 
-    attr_reader :overlay_id, :name
-
     def initialize
-      super
-      @overlay_id = 'thomthom.modelinfo'.freeze
-      @name = 'Model Information'.freeze
+      super('thomthom.modelinfo', 'Model Information')
 
       @model_info = {}
       @display_info = false
@@ -58,18 +54,15 @@ module TT::Plugins::ModelInfo
     end
 
 
-    # @param [Sketchup::View] view
     def start(view)
       puts "start (#{self.class.name})"
       start_observing_app
     end
 
-    # @param [Sketchup::View] view
-    def stop(view)
+    def stop
       puts "stop (#{self.class.name})"
       stop_observing_app
-      # reset(view&.model || Sketchup.active_model)
-      reset(view&.model)
+      reset(Sketchup.active_model)
     end
 
     # @param [Sketchup::View] view
