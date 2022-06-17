@@ -54,7 +54,7 @@ module TT::Plugins::ModelInfo
     end
 
 
-    def start(view)
+    def start
       puts "start (#{self.class.name})"
       start_observing_app
     end
